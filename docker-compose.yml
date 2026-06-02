@@ -1,0 +1,97 @@
+services:
+
+  frontend:
+    image: shopfast/frontend:v1
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - shopfast-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+  backend:
+    image: shopfast/backend:v1
+    container_name: backend
+    ports:
+      - "5001:5000"
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/shopfast
+      REDIS_URI: redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - shopfast-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+
+  payment-service:
+    image: shopfast/payment:v1
+    container_name: payment-service
+    ports:
+      - "8000:8000"
+    networks:
+      - shopfast-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - shopfast-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - shopfast-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  shopfast-network:
+    driver: bridge
