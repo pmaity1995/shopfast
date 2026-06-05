@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         app: payment-service
+        version: v1
     spec:
       containers:
         - name: payment-service
